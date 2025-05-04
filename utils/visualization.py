@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from plotly.subplots import make_subplots
 
@@ -350,45 +349,53 @@ def plot_stock_data(data, title="Stock Price History"):
     title: str
         Plot title
     """
+    if data is None or data.empty:
+        st.warning("No data provided for plotting.")
+        return
+        
     if 'Date' not in data.columns:
-        st.error("Date column not found in stock data.")
+        st.warning("Date column not found in stock data. Please ensure your data contains a 'Date' column.")
         return
     
-    # Make sure Date is datetime type
-    data['Date'] = pd.to_datetime(data['Date'])
-    
-    # Select price columns
-    price_cols = [col for col in ['Close', 'Open', 'High', 'Low'] if col in data.columns]
-    
-    if not price_cols:
-        st.error("No price columns found in the data.")
-        return
-    
-    # Create a line plot for closing prices
-    main_price = price_cols[0]  # Usually 'Close'
-    
-    fig = px.line(
-        data,
-        x='Date',
-        y=main_price,
-        title=title,
-        labels={'x': 'Date', 'y': f'{main_price} Price'}
-    )
-    
-    # Add volume if available
-    if 'Volume' in data.columns:
-        fig2 = px.bar(
+    try:
+        # Make sure Date is datetime type
+        data['Date'] = pd.to_datetime(data['Date'])
+        
+        # Select price columns
+        price_cols = [col for col in ['Close', 'Open', 'High', 'Low'] if col in data.columns]
+        
+        if not price_cols:
+            st.warning("No price columns (Close, Open, High, Low) found in the data. Please ensure your data contains at least one price column.")
+            return
+        
+        # Create a line plot for closing prices
+        main_price = price_cols[0]  # Usually 'Close'
+        
+        fig = px.line(
             data,
             x='Date',
-            y='Volume',
-            title='Trading Volume',
-            labels={'x': 'Date', 'y': 'Volume'}
+            y=main_price,
+            title=title,
+            labels={'x': 'Date', 'y': f'{main_price} Price'}
         )
         
-        st.plotly_chart(fig, use_container_width=True)
-        st.plotly_chart(fig2, use_container_width=True)
-    else:
-        st.plotly_chart(fig, use_container_width=True)
+        # Add volume if available
+        if 'Volume' in data.columns:
+            fig2 = px.bar(
+                data,
+                x='Date',
+                y='Volume',
+                title='Trading Volume',
+                labels={'x': 'Date', 'y': 'Volume'}
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.plotly_chart(fig, use_container_width=True)
+            
+    except Exception as e:
+        st.error(f"An error occurred while plotting the stock data: {str(e)}")
 
 def plot_pca_explained_variance(pca):
     """
