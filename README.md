@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Financial Machine Learning Pipeline
 
 ## Overview
@@ -64,3 +65,7 @@ This interactive Streamlit application provides a step-by-step guided machine le
 - Matplotlib
 - Plotly
 - yfinance
+=======
+# DataWorkflowIntelligence
+Using machine learning to model financial data sets.
+>>>>>>> 34ce9a166dea6371720319b22cba95be39be79b2
