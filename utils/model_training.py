@@ -8,6 +8,8 @@ from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, confus
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.svm import SVR, SVC
 
 def split_data(data, target=None, test_size=0.2, random_state=42):
     """
@@ -248,3 +250,45 @@ def get_optimal_clusters(X, max_clusters=10):
             silhouette_scores.append(0)
     
     return list(k_values), inertia, silhouette_scores
+
+def train_model(X, y, model_type='regression', model_name='linear'):
+    """Train a machine learning model"""
+    try:
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # Select model
+        if model_type == 'regression':
+            if model_name == 'linear':
+                model = LinearRegression()
+            elif model_name == 'random_forest':
+                model = RandomForestRegressor()
+            elif model_name == 'svm':
+                model = SVR()
+        else:  # classification
+            if model_name == 'logistic':
+                model = LogisticRegression()
+            elif model_name == 'random_forest':
+                model = RandomForestClassifier()
+            elif model_name == 'svm':
+                model = SVC()
+        
+        # Train model
+        model.fit(X_train, y_train)
+        
+        # Make predictions
+        y_pred = model.predict(X_test)
+        
+        # Calculate metrics
+        if model_type == 'regression':
+            mse = mean_squared_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred)
+            return model, {'mse': mse, 'r2': r2}
+        else:
+            accuracy = accuracy_score(y_test, y_pred)
+            conf_matrix = confusion_matrix(y_test, y_pred)
+            return model, {'accuracy': accuracy, 'confusion_matrix': conf_matrix}
+            
+    except Exception as e:
+        st.error(f"Error training model: {str(e)}")
+        return None, None

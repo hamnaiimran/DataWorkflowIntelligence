@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import streamlit as st
-import datetime
+from datetime import datetime, timedelta
 
 def load_csv_data(uploaded_file):
     """
@@ -38,16 +38,16 @@ def load_csv_data(uploaded_file):
         st.error("Error reading the file. Please ensure the file is encoded in UTF-8.")
         return None
     except Exception as e:
-        st.error(f"Unexpected error while loading the CSV file: {str(e)}")
+        st.error(f"Error loading CSV file: {str(e)}")
         return None
 
-def fetch_yahoo_finance_data(ticker, start_date, end_date):
+def fetch_yahoo_finance_data(symbol, start_date, end_date):
     """
     Fetch stock data from Yahoo Finance
     
     Parameters:
     -----------
-    ticker: str
+    symbol: str
         Stock ticker symbol
     start_date: datetime
         Start date for fetching data
@@ -59,7 +59,7 @@ def fetch_yahoo_finance_data(ticker, start_date, end_date):
     pd.DataFrame
         DataFrame containing the stock data
     """
-    if not ticker:
+    if not symbol:
         st.warning("No ticker symbol provided.")
         return None
         
@@ -67,7 +67,7 @@ def fetch_yahoo_finance_data(ticker, start_date, end_date):
         st.warning("Please provide both start and end dates.")
         return None
         
-    if not isinstance(start_date, datetime.datetime) or not isinstance(end_date, datetime.datetime):
+    if not isinstance(start_date, datetime) or not isinstance(end_date, datetime):
         st.warning("Start and end dates must be datetime objects.")
         return None
         
@@ -75,19 +75,19 @@ def fetch_yahoo_finance_data(ticker, start_date, end_date):
         st.warning("Start date cannot be after end date.")
         return None
         
-    if start_date > datetime.datetime.now():
+    if start_date > datetime.now():
         st.warning("Start date cannot be in the future.")
         return None
         
     try:
-        data = yf.download(ticker, start=start_date, end=end_date)
+        data = yf.download(symbol, start=start_date, end=end_date)
         
         # Reset index to make Date a column
         data = data.reset_index()
         
         # Check if data is empty
         if data.empty:
-            st.warning(f"No data found for ticker {ticker} in the specified date range ({start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}).")
+            st.warning(f"No data found for ticker {symbol} in the specified date range ({start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}).")
             return None
             
         return data
@@ -95,42 +95,29 @@ def fetch_yahoo_finance_data(ticker, start_date, end_date):
         st.error(f"Error fetching data from Yahoo Finance: {str(e)}")
         return None
     except Exception as e:
-        st.error(f"Unexpected error while fetching data: {str(e)}")
+        st.error(f"Error fetching data from Yahoo Finance: {str(e)}")
         return None
 
-def get_summary_stats(data):
+def get_summary_stats(df):
     """
-    Generate summary statistics for the data
+    Get summary statistics of the dataframe
     
     Parameters:
     -----------
-    data: pd.DataFrame
-        The input data
+    df: pd.DataFrame
+        The input dataframe
         
     Returns:
     --------
     pd.DataFrame
-        Summary statistics of the data
+        Summary statistics of the dataframe
     """
-    if data is None or data.empty:
+    if df is None or df.empty:
         st.warning("No data provided for summary statistics.")
         return None
         
     try:
-        numeric_data = data.select_dtypes(include=[np.number])
-        if numeric_data.empty:
-            st.warning("No numeric columns found in the data for summary statistics.")
-            return None
-            
-        try:
-            summary = numeric_data.describe()
-            if summary.empty:
-                st.warning("Could not generate summary statistics for the numeric columns.")
-                return None
-            return summary
-        except Exception as e:
-            st.error(f"Error calculating summary statistics: {str(e)}")
-            return None
+        return df.describe()
     except Exception as e:
-        st.error(f"Error processing data for summary statistics: {str(e)}")
+        st.error(f"Error calculating summary statistics: {str(e)}")
         return None

@@ -4,6 +4,44 @@ import streamlit as st
 from sklearn.feature_selection import SelectKBest, f_regression, mutual_info_regression
 from sklearn.decomposition import PCA
 
+def create_date_features(df):
+    """Create date-based features"""
+    if 'Date' in df.columns:
+        df['Date'] = pd.to_datetime(df['Date'])
+        df['year'] = df['Date'].dt.year
+        df['month'] = df['Date'].dt.month
+        df['day'] = df['Date'].dt.day
+        df['dayofweek'] = df['Date'].dt.dayofweek
+    return df
+
+def create_lag_features(df, columns, lags=[1, 2, 3]):
+    """Create lag features for specified columns"""
+    for col in columns:
+        for lag in lags:
+            df[f'{col}_lag_{lag}'] = df[col].shift(lag)
+    return df
+
+def create_rolling_features(df, columns, windows=[3, 5, 7]):
+    """Create rolling window features"""
+    for col in columns:
+        for window in windows:
+            df[f'{col}_rolling_mean_{window}'] = df[col].rolling(window=window).mean()
+            df[f'{col}_rolling_std_{window}'] = df[col].rolling(window=window).std()
+    return df
+
+def select_features(df, target_column):
+    """Select relevant features"""
+    if target_column in df.columns:
+        features = df.drop(columns=[target_column]).select_dtypes(include=[np.number])
+        return features
+    return df.select_dtypes(include=[np.number])
+
+def apply_pca(df, n_components=2):
+    """Apply PCA to reduce dimensionality"""
+    pca = PCA(n_components=n_components)
+    pca_result = pca.fit_transform(df)
+    return pd.DataFrame(pca_result, columns=[f'PC{i+1}' for i in range(n_components)])
+
 def create_date_features(data, date_column):
     """
     Create features from date column
